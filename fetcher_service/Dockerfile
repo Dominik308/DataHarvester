@@ -12,9 +12,6 @@ RUN apt-get update && apt-get install -y python3.11 python3.11-distutils python3
 # Verify Python installation
 RUN python3.11 --version && pip3 --version
 
-# Set default python version
-RUN ln -s /usr/bin/python3.11 /usr/bin/python
-
 # Install Python dependencies
 RUN apt-get install -y python3-requests
 RUN apt-get install -y python3-kafka
@@ -26,4 +23,4 @@ WORKDIR /DataHarvester/fetcher_service
 COPY . .
 
 # Set the default command
-CMD ["python", "fetcher_service.py"]
+CMD ["python3", "fetcher_service.py"]
