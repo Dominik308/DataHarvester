@@ -10,7 +10,8 @@ RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get update && apt-get install -y python3.10 python3-pip
 
 # Install Python dependencies
-RUN apt install requests kafka-python
+RUN apt install kafka-python
+RUN apt install requests
 
 # Set the working directory
 WORKDIR /DataHarvester/fetcher_service

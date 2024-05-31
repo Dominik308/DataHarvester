@@ -4,16 +4,17 @@ FROM ubuntu:latest
 # Update and upgrade the system
 RUN apt-get update && apt-get upgrade -y
 
-# Install Python 3.10 and pip
+# Install Python 3 and pip
 RUN apt-get install -y software-properties-common
 RUN add-apt-repository ppa:deadsnakes/ppa
-RUN apt-get update && apt-get install -y python3.10 python3-pip
+RUN apt-get update && apt-get install -y python3.11 python3.11-distutils python3-pip
 
 # Verify Python installation
 RUN python3 --version && pip3 --version
 
-# Install Python dependencies
-#RUN pip3 install kafka-python elasticsearch
+RUN apt-get install -y python3-requests
+RUN apt-get install -y python3-kafka
+RUN apt-get install -y python3-elasticsearch
 
 # Set the working directory
 WORKDIR /DataHarvester/processor_service
