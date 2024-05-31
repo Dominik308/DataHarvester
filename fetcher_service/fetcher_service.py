@@ -25,6 +25,7 @@ def main():
     symbol = 'AAPL'  # Example stock symbol
     while True:
         data = fetch_stock_data(symbol)
+        print(data)
         producer.send(KAFKA_TOPIC, data)
         time.sleep(300)  # Fetch data every 5 minutes
 
