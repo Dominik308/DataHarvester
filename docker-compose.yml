@@ -1,17 +1,22 @@
 services:
   zookeeper:
-    image: zookeeper:3.7.0
+    image: confluentinc/cp-zookeeper:7.0.0
     ports:
       - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
 
   kafka:
-    image: wurstmeister/kafka:2.13-2.8.1
+    image: confluentinc/cp-kafka:7.0.0
     ports:
       - "9092:9092"
+    hostname: kafka-server
     environment:
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
@@ -31,12 +36,16 @@ services:
     build: ./fetcher_service
     depends_on:
       - kafka
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
   processor_service:
     build: ./processor_service
     depends_on:
       - kafka
       - elasticsearch
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   esdata:

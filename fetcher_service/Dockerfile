@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y python3.11 python3-pip
 # Install Python dependencies
 RUN pip install kafka-python-ng
 RUN pip install requests
+RUN pip install msgpack
 
 # Set the working directory
 WORKDIR /DataHarvester/fetcher_service
@@ -21,4 +22,4 @@ WORKDIR /DataHarvester/fetcher_service
 COPY . .
 
 # Set the default command
-CMD ["python3", "fetcher_service.py"]
+CMD ["python3", "publisher_service.py"]
