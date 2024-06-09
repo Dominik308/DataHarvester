@@ -1,13 +1,4 @@
-import json
-import msgpack
-
 from kafka import KafkaConsumer
-
-# To consume latest messages and auto-commit offsets
-consumer = KafkaConsumer('my-topic',
-                         bootstrap_servers='kafka-server:9092',
-                         auto_offset_reset='earliest',
-                         consumer_timeout_ms=1000)
 
 while True:
     consumer = KafkaConsumer('my-topic',
