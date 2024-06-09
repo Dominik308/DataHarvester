@@ -28,11 +28,14 @@ es.indices.put_settings(
         }
     }
 )
+
+
 # Function to clean data
 def clean_data(data):
     # Implement your data cleaning logic here
     cleaned_data = data  # Placeholder line
     return cleaned_data
+
 
 # Consume messages from the topics
 for message in consumer:
