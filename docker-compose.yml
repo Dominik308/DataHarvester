@@ -1,15 +1,4 @@
 services:
-#  zookeeper:
-#    image: confluentinc/cp-zookeeper:7.0.0
-#    container_name: zookeeper
-#    hostname: zookeeper
-#    ports:
-#      - "2181:2181"
-#    environment:
-#      ZOOKEEPER_CLIENT_PORT: 2181
-#    networks:
-#      - broker-kafka
-
   kafka:
     image: apache/kafka:latest
     hostname: broker
@@ -34,7 +23,7 @@ services:
     networks:
       - broker-kafka
 
-  #UI erreichbar unter http://localhost:8080
+  # Reach UI under: http://localhost:8080
   akhq:
     image: tchiotludo/akhq
     environment:
@@ -50,17 +39,6 @@ services:
       - kafka
     networks:
       - broker-kafka
-#  kafdrop:
-#    image: obsidiandynamics/kafdrop:3.27.0
-#    depends_on:
-#      - kafka
-#      - zookeeper
-#    ports:
-#      - 19000:9000
-#    environment:
-#      KAFKA_BROKERCONNECT: kafka:29092
-#    networks:
-#      - broker-kafka
 
 #  elasticsearch:
 #    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
@@ -78,34 +56,30 @@ services:
 #    networks:
 #      - broker-kafka
 
-#  publisher:
-#    build: ./fetcher_service
-#    depends_on:
-#      - kafka
-#    volumes:
-#      - /var/run/docker.sock:/var/run/docker.sock
-#    networks:
-#      - broker-kafka
-#    environment:
-#      KAFKA_BROKER: "kafka:9092"
-#
-#  consumer:
-#    build: ./processor_service
-#    depends_on:
-#      - kafka
-#      - publisher
-##      - elasticsearch
-#    volumes:
-#      - /var/run/docker.sock:/var/run/docker.sock
-#    networks:
-#      - broker-kafka
-#    environment:
-#      KAFKA_BROKER: "kafka:9092"
+  publisher:
+    build: ./fetcher_service
+    depends_on:
+      - kafka
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - broker-kafka
+    environment:
+      KAFKA_BROKER: "kafka:9092"
+
+  consumer:
+    build: ./processor_service
+    depends_on:
+      - kafka
+      - publisher
+#      - elasticsearch
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - broker-kafka
+    environment:
+      KAFKA_BROKER: "kafka:9092"
 
 networks:
   broker-kafka:
     driver: bridge
-
-#volumes:
-#  esdata:
-#    driver: local
