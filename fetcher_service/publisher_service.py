@@ -1,23 +1,26 @@
-import time
-
+import json
 from kafka import KafkaProducer
-from kafka.errors import KafkaError
+import yfinance as yf
 
+# Create an instance of the KafkaProducer
+producer = KafkaProducer(
+    bootstrap_servers='localhost:9092',  # Kafka server address
+    value_serializer=lambda v: json.dumps(v).encode('utf-8')  # Serializer function
+)
 
-producer = KafkaProducer(bootstrap_servers='kafka-server:9092')
+# Fetch stock information
+stock = yf.Ticker("AAPL")  # Replace 'AAPL' with your desired stock symbol
 
-# Asynchronous by default
-future = producer.send('my-topic', b'raw_bytes')
+# Fetch and send historical market data for different periods
+for period in ['2y', '1y', '6mo', '1mo', '5d', '1d']:
+    history = stock.history(period=period)
+    history_json = history.to_json()
 
-# Block for 'synchronous' sends
-while True:
-    try:
-        record_metadata = future.get(timeout=5)
-        producer.flush()
-        print(record_metadata)
-    except KafkaError as ex:
-        # Decide what to do if produce request failed...
-        print(ex)
-        # exit()
-    finally:
-        time.sleep(3)
+    # Send the historical market data to the Kafka topic
+    producer.send(f'stonks_{period}', history_json)
+
+# Ensure all messages are sent
+producer.flush()
+
+# Close the producer connection
+producer.close()
