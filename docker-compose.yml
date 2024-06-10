@@ -1,27 +1,4 @@
 services:
-
-  #Zookeeper?? Nein, Deprecated. Finger weg.
-  #zookeeper:
-   # image: confluentinc/cp-zookeeper:7.0.0
-    #ports:
-     # - "2181:2181"
-    #environment:
-     # ZOOKEEPER_CLIENT_PORT: 2181
-
-  #kafka:
-    #image: confluentinc/cp-kafka:7.0.0 #Warum ist die Version 3 Jahre alt???? Gibt mittlerweile auch ein Package von Apache selbst ist
-    #ports:
-     # - "9092:9092"
-    #hostname: kafka-server
-    #environment:
-      #KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181 #Zookeeper ist deprecated
-      #KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      #KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    #depends_on:
-      #- zookeeper #Deprecated
-
-  #Okay nur ein Node? Wollt ihr nicht ein Cluster haben? Aber von mir aus...
-  #Vgl für Single Node: https://github.com/apache/kafka/blob/trunk/docker/examples/jvm/single-node/plaintext/docker-compose.yml
   kafka:
     image: apache/kafka:latest
     hostname: broker
@@ -44,9 +21,9 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
     networks:
-      - kafka-netzwerk
+      - broker-kafka
 
-  #UI erreichbar unter http://localhost:0808
+  # Reach UI under: http://localhost:8080
   akhq:
     image: tchiotludo/akhq
     environment:
@@ -61,7 +38,48 @@ services:
     links:
       - kafka
     networks:
-      - kafka-netzwerk
+      - broker-kafka
+
+#  elasticsearch:
+#    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+#    environment:
+#      - discovery.type=single-node
+#      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+#    ports:
+#      - "9200:9200"
+#    ulimits:
+#      memlock:
+#        soft: -1
+#        hard: -1
+#    volumes:
+#      - esdata:/usr/share/elasticsearch/data
+#    networks:
+#      - broker-kafka
+
+  publisher:
+    build: ./fetcher_service
+    depends_on:
+      - kafka
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - broker-kafka
+    environment:
+      KAFKA_BROKER: "kafka:9092"
+
+  consumer:
+    build: ./processor_service
+    depends_on:
+      - kafka
+      - publisher
+#      - elasticsearch
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - broker-kafka
+    environment:
+      KAFKA_BROKER: "kafka:9092"
 
 networks:
-  kafka-netzwerk:
+  broker-kafka:
+    driver: bridge

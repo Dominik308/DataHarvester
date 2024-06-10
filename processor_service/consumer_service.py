@@ -1,11 +1,24 @@
-from kafka import KafkaConsumer
-from elasticsearch import Elasticsearch
 import json
+import subprocess
+import time
+
+from elasticsearch import Elasticsearch
+from kafka import KafkaConsumer
+
+
+def get_ip_of_broker(name: str) -> str:
+    ip = subprocess.run('ping -c1 broker | head -n1 | cut -d" " -f3', shell=True, stdout=subprocess.PIPE)
+    return ip.stdout.decode('utf-8')[1:-2]
+
+
+time.sleep(10)  # Wait for ending creation of broker
+ip_of_broker = get_ip_of_broker("broker")
+
 
 # Create a Kafka consumer
 consumer = KafkaConsumer(
     *['stonks_max', 'stonks_1y', 'stonks_6mo', 'stonks_1mo', 'stonks_1wk', 'stonks_1d'],  # List of topics
-    bootstrap_servers='localhost:9092',
+    bootstrap_servers=f'{ip_of_broker}:19092',
     auto_offset_reset='earliest',
     value_deserializer=lambda v: json.loads(v.decode('utf-8'))  # Deserializer function
 )
