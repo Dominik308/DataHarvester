@@ -18,6 +18,7 @@ RUN pip install kafka-python-ng
 RUN pip install requests
 RUN pip install msgpack
 RUN pip install aiokafka
+RUN pip install elasticsearch
 
 # Set the working directory
 WORKDIR /DataHarvester/processor_service

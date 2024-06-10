@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y python3.11 python3-pip
 RUN pip install kafka-python-ng
 RUN pip install requests
 RUN pip install msgpack
+RUN pip install yfinance
 #RUN pip install aiokafka
 
 # Set the working directory
