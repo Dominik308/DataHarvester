@@ -40,21 +40,27 @@ services:
     networks:
       - broker-kafka
 
-#  elasticsearch:
-#    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
-#    environment:
-#      - discovery.type=single-node
-#      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-#    ports:
-#      - "9200:9200"
-#    ulimits:
-#      memlock:
-#        soft: -1
-#        hard: -1
-#    volumes:
-#      - esdata:/usr/share/elasticsearch/data
-#    networks:
-#      - broker-kafka
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+    hostname: data-preparer
+    container_name: data-preparer
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+#      - ELASTIC_USERNAME=elastic
+#      - ELASTIC_PASSWORD=MagicWord
+#      - xpack.security.enabled=true
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata:/usr/share/elasticsearch/data # For saving data outside, e.g. in a database
+    networks:
+      - broker-kafka
 
   publisher:
     build: ./fetcher_service
@@ -72,7 +78,7 @@ services:
     depends_on:
       - kafka
       - publisher
-#      - elasticsearch
+      - elasticsearch
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
@@ -83,3 +89,7 @@ services:
 networks:
   broker-kafka:
     driver: bridge
+
+volumes:
+  esdata:
+    driver: local

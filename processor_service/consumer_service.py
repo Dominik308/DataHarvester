@@ -7,30 +7,41 @@ from kafka import KafkaConsumer
 
 
 def get_ip_of_broker(name: str) -> str:
+    """Gets IP via ping command in linux shell"""
     ip = subprocess.run('ping -c1 broker | head -n1 | cut -d" " -f3', shell=True, stdout=subprocess.PIPE)
     return ip.stdout.decode('utf-8')[1:-2]
 
 
-time.sleep(10)  # Wait for ending creation of broker
-ip_of_broker = get_ip_of_broker("broker")
+def clean_data(data):
+    """Function to clean data"""
+    # Implement your data cleaning logic here
+    cleaned_data = data  # Placeholder line
+    return cleaned_data
 
+
+# Wait for ending creation of broker
+time.sleep(10)
 
 # Create a Kafka consumer
+ip_of_broker = get_ip_of_broker("broker")
 consumer = KafkaConsumer(
     *['stonks_max', 'stonks_1y', 'stonks_6mo', 'stonks_1mo', 'stonks_1wk', 'stonks_1d'],  # List of topics
-    bootstrap_servers=f'{ip_of_broker}:19092',
+    bootstrap_servers=f'{ip_of_broker}:9092',
+    # bootstrap_servers=f'{ip_of_broker}:19092',
     auto_offset_reset='earliest',
     value_deserializer=lambda v: json.loads(v.decode('utf-8'))  # Deserializer function
 )
 
 # Create an Elasticsearch client
+ip_of_data_preparer = get_ip_of_broker("data-preparer")
 es = Elasticsearch(
-    ['http://localhost:9200'],
-    basic_auth=('elastic', '123456')
+    [f'http://{ip_of_data_preparer}:9200'],
+    # basic_auth=("elastic", "MagicWord")
 )
 
 es.indices.put_settings(
     index='stock_data',
+    headers={'Content-Type': 'application/json'},
     body={
         'index': {
             'mapping': {
@@ -41,14 +52,6 @@ es.indices.put_settings(
         }
     }
 )
-
-
-# Function to clean data
-def clean_data(data):
-    # Implement your data cleaning logic here
-    cleaned_data = data  # Placeholder line
-    return cleaned_data
-
 
 # Consume messages from the topics
 for message in consumer:
