@@ -26,8 +26,7 @@ time.sleep(10)
 ip_of_broker = get_ip_of_broker("broker")
 consumer = KafkaConsumer(
     *['stonks_max', 'stonks_1y', 'stonks_6mo', 'stonks_1mo', 'stonks_1wk', 'stonks_1d'],  # List of topics
-    bootstrap_servers=f'{ip_of_broker}:9092',
-    # bootstrap_servers=f'{ip_of_broker}:19092',
+    bootstrap_servers=f'{ip_of_broker}:19092',
     auto_offset_reset='earliest',
     value_deserializer=lambda v: json.loads(v.decode('utf-8'))  # Deserializer function
 )
@@ -35,9 +34,13 @@ consumer = KafkaConsumer(
 # Create an Elasticsearch client
 ip_of_data_preparer = get_ip_of_broker("data-preparer")
 es = Elasticsearch(
-    [f'http://{ip_of_data_preparer}:9200'],
+    hosts=[{"host": "host.docker.internal", "port": 9200}]
+    # [f'http://{ip_of_data_preparer}:9200'],
     # basic_auth=("elastic", "MagicWord")
 )
+
+if not es.indices.exists(index='stock_data'):
+    es.indices.create(index='stock_data')
 
 es.indices.put_settings(
     index='stock_data',
