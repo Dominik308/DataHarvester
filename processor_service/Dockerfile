@@ -19,6 +19,7 @@ RUN pip install requests
 RUN pip install msgpack
 RUN pip install aiokafka
 RUN pip install elasticsearch==7.10.1
+RUN pip install pandas
 
 # Set the working directory
 WORKDIR /DataHarvester/processor_service

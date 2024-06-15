@@ -4,6 +4,7 @@ import time
 
 from elasticsearch import Elasticsearch
 from kafka import KafkaConsumer
+import pandas as pd
 
 
 def get_ip_of_broker(name: str) -> str:
@@ -13,21 +14,27 @@ def get_ip_of_broker(name: str) -> str:
 
 
 def clean_data(data):
-    """Function to clean data"""
+    """Function to clean and restructure stock market data"""
+    if isinstance(data, str):
+        data = json.loads(data)
+    
     cleaned_data = []
-    for key in data['_source']:
-        for timestamp, value in data['_source'][key].items():
-            print("KEY", key)
-            if value != 0:
-                cleaned_data.append({
-                    'Timestamp': pd.to_datetime(int(timestamp), unit='ms'),
-                    key: value
-                })
-
+    
+    timestamps = list(data['Open'].keys())
+    
+    for timestamp in timestamps:
+        row = {'Timestamp': pd.to_datetime(int(timestamp), unit='ms')}
+        for key in ['Open', 'High', 'Low', 'Close', 'Volume', 'Dividends', 'Stock Splits']:
+            row[key] = data[key].get(timestamp, 0)
+        cleaned_data.append(row)
+    
     df = pd.DataFrame(cleaned_data)
     df.sort_values('Timestamp', inplace=True)
-
+    
+    print("Successfully cleaned the data!")
+    
     return df
+
 
 
 # Wait for ending creation of broker
@@ -71,7 +78,7 @@ es.indices.put_settings(
 for message in consumer:
     # Get the raw data
     raw_data = message.value
-    # print("RAW DATA", raw_data)
+    print("RAW DATA", raw_data)
 
     # Save the raw data
     with open('raw_data.json', 'a') as f:
@@ -80,12 +87,16 @@ for message in consumer:
 
     # Clean the data
     cleaned_data = clean_data(raw_data)
-    # print("CLEANED DATA", cleaned_data)
+    print("CLEANED DATA", cleaned_data)
+    
+    cleaned_data_json = cleaned_data.to_json(orient='records', lines=True)
+    
+    print("CLEANED DATA AS JSON", cleaned_data_json)
 
     # Save the cleaned data
     with open('cleaned_data.json', 'a') as f:
-        json.dump(cleaned_data, f)
+        json.dump(cleaned_data_json, f)
         f.write('\n')
 
     # Send the cleaned data to Elasticsearch
-    es.index(index='stock_data', body=cleaned_data)
+    es.index(index='stock_data', body=cleaned_data_json)
