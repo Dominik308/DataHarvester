@@ -14,9 +14,20 @@ def get_ip_of_broker(name: str) -> str:
 
 def clean_data(data):
     """Function to clean data"""
-    # Implement your data cleaning logic here
-    cleaned_data = data  # Placeholder line
-    return cleaned_data
+    cleaned_data = []
+    for key in data['_source']:
+        for timestamp, value in data['_source'][key].items():
+            print("KEY", key)
+            if value != 0:
+                cleaned_data.append({
+                    'Timestamp': pd.to_datetime(int(timestamp), unit='ms'),
+                    key: value
+                })
+
+    df = pd.DataFrame(cleaned_data)
+    df.sort_values('Timestamp', inplace=True)
+
+    return df
 
 
 # Wait for ending creation of broker
@@ -60,6 +71,7 @@ es.indices.put_settings(
 for message in consumer:
     # Get the raw data
     raw_data = message.value
+    # print("RAW DATA", raw_data)
 
     # Save the raw data
     with open('raw_data.json', 'a') as f:
@@ -68,6 +80,7 @@ for message in consumer:
 
     # Clean the data
     cleaned_data = clean_data(raw_data)
+    # print("CLEANED DATA", cleaned_data)
 
     # Save the cleaned data
     with open('cleaned_data.json', 'a') as f:

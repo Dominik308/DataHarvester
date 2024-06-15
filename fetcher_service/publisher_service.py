@@ -28,6 +28,8 @@ for period in ['2y', '1y', '6mo', '1mo', '5d', '1d']:
     history = stock.history(period=period)
     history_json = history.to_json()
 
+    print("Send data to Kafka!")
+
     # Send the historical market data to the Kafka topic
     producer.send(f'stonks_{period}', history_json)
 
