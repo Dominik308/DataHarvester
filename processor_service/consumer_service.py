@@ -1,10 +1,10 @@
 import json
 import subprocess
 import time
+import pandas as pd
 
 from elasticsearch import Elasticsearch
 from kafka import KafkaConsumer
-import pandas as pd
 
 
 def get_ip_of_broker(name: str) -> str:
@@ -13,7 +13,7 @@ def get_ip_of_broker(name: str) -> str:
     return ip.stdout.decode('utf-8')[1:-2]
 
 
-def clean_data(data):
+def clean_data(data: str) -> pd.DataFrame:
     """Function to clean and restructure stock market data"""
     if isinstance(data, str):
         data = json.loads(data)
@@ -23,7 +23,7 @@ def clean_data(data):
     timestamps = list(data['Open'].keys())
     
     for timestamp in timestamps:
-        row = {'Timestamp': pd.to_datetime(int(timestamp), unit='ms')}
+        row = {'Timestamp': pd.to_datetime(int(timestamp), unit='ms').strftime('%Y-%m-%d %H:%M:%S')}
         for key in ['Open', 'High', 'Low', 'Close', 'Volume', 'Dividends', 'Stock Splits']:
             row[key] = data[key].get(timestamp, 0)
         cleaned_data.append(row)
