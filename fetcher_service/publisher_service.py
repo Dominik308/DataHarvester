@@ -24,7 +24,8 @@ producer = KafkaProducer(
 stock = yf.Ticker("AAPL")  # Replace 'AAPL' with your desired stock symbol
 
 # Fetch and send historical market data for different periods
-for period in ['2y', '1y', '6mo', '1mo', '5d', '1d']:
+#for period in ['2y', '1y', '6mo', '1mo', '5d', '1d']:
+for period in ['1mo']:
     history = stock.history(period=period)
     history_json = history.to_json()
 

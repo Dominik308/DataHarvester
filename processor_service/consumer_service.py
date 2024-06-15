@@ -80,23 +80,12 @@ for message in consumer:
     raw_data = message.value
     print("RAW DATA", raw_data)
 
-    # Save the raw data
-    with open('raw_data.json', 'a') as f:
-        json.dump(raw_data, f)
-        f.write('\n')
-
     # Clean the data
     cleaned_data = clean_data(raw_data)
-    print("CLEANED DATA", cleaned_data)
-    
-    cleaned_data_json = cleaned_data.to_json(orient='records', lines=True)
-    
-    print("CLEANED DATA AS JSON", cleaned_data_json)
 
-    # Save the cleaned data
-    with open('cleaned_data.json', 'a') as f:
-        json.dump(cleaned_data_json, f)
-        f.write('\n')
+    # Convert the cleaned data to a dictionary
+    cleaned_data_dict = cleaned_data.to_dict(orient='records')
 
     # Send the cleaned data to Elasticsearch
-    es.index(index='stock_data', body=cleaned_data_json)
+    for record in cleaned_data_dict:
+        es.index(index='stock_data', body=record)
