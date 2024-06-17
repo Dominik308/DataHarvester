@@ -26,5 +26,4 @@ WORKDIR /DataHarvester/fetcher_service
 
 COPY . .
 
-CMD ["python3", "real_time_api.py"]
 CMD ["python3", "publisher_service.py"]
