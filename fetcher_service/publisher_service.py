@@ -47,6 +47,25 @@ for period in ['1y', '1mo', '5d']:
     # Send the historical market data to the Kafka topic
     producer.send(f'stonks_{period}', history_json)
 
+# Fetch and send real-time market data
+try:
+    while True:
+        ticker = yf.Ticker("AAPL")
+        info = ticker.info
+        if 'currentPrice' in info:
+            print(f"Current price of {info['symbol']} is {info['currentPrice']} at {time.strftime('%d.%m.%Y %H:%M', time.localtime())}")
+            data = {
+                'symbol': info['symbol'],
+                'price': info['currentPrice'],
+                'time': time.strftime('%d.%m.%Y %H:%M', time.localtime())
+            }
+            producer.send('real_time', data)
+
+        time.sleep(10)
+except Exception as e:
+    print(f"An error occurred: {e}")
+
+
 # Ensure all messages are sent
 producer.flush()
 
