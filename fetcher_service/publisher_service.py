@@ -11,6 +11,20 @@ def get_ip_of_broker(name: str) -> str:
     return ip.stdout.decode('utf-8')[1:-2]
 
 
+def restructure_data(data):
+    data = json.loads(data)
+
+    restructured_data = {}
+    for attribute, values in data.items():
+        for timestamp, value in values.items():
+            if timestamp not in restructured_data:
+                restructured_data[timestamp] = {}
+
+            restructured_data[timestamp][attribute] = value
+
+    return restructured_data
+
+
 time.sleep(10)  # Wait for ending creation of broker
 ip_of_broker = get_ip_of_broker("broker")
 
@@ -24,10 +38,9 @@ producer = KafkaProducer(
 stock = yf.Ticker("AAPL")  # Replace 'AAPL' with your desired stock symbol
 
 # Fetch and send historical market data for different periods
-#for period in ['2y', '1y', '6mo', '1mo', '5d', '1d']:
-for period in ['1mo']:
+for period in ['1y', '1mo', '5d']:
     history = stock.history(period=period)
-    history_json = history.to_json()
+    history_json = restructure_data(history.to_json())
 
     print("Send data to Kafka!")
 

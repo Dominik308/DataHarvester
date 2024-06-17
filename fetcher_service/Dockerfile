@@ -22,9 +22,9 @@ RUN pip install yfinance
 
 # Set the working directory
 WORKDIR /DataHarvester/fetcher_service
-
 # Copy the application files
+
 COPY . .
 
-# Set the default command
+CMD ["python3", "real_time_api.py"]
 CMD ["python3", "publisher_service.py"]

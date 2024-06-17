@@ -43,7 +43,7 @@ time.sleep(10)
 # Create a Kafka consumer
 ip_of_broker = get_ip_of_broker("broker")
 consumer = KafkaConsumer(
-    *['stonks_max', 'stonks_1y', 'stonks_6mo', 'stonks_1mo', 'stonks_1wk', 'stonks_1d'],  # List of topics
+    *['stonks_1y', 'stonks_1mo', 'stonks_1wk', 'real_time'],  # List of topics
     bootstrap_servers=f'{ip_of_broker}:19092',
     auto_offset_reset='earliest',
     value_deserializer=lambda v: json.loads(v.decode('utf-8'))  # Deserializer function
