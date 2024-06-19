@@ -13,7 +13,7 @@ def get_ip_of_broker(name: str) -> str:
 
 
 # Wait for ending creation of broker
-time.sleep(10)
+time.sleep(30)
 
 # Create a Kafka consumer
 ip_of_broker = get_ip_of_broker("broker")
