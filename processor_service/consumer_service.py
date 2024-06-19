@@ -41,9 +41,5 @@ for message in consumer:
     data = message.value  # Get the data as dict
     print("Data:", data, flush=True)
 
-    with open('raw_data.json', 'a') as f:
-        json.dump(data, f)
-        f.write('\n')
-
     # Send the data to Elasticsearch as json structure, e.g. dict is okay
     es.index(index='stock_data', body=data)
