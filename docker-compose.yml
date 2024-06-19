@@ -41,7 +41,7 @@ services:
       - broker-kafka
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.0
     hostname: data-preparer
     container_name: data-preparer
     environment:
@@ -65,7 +65,7 @@ services:
   kibana:
     hostname: kibana
     container_name: kibana
-    image: docker.elastic.co/kibana/kibana:7.10.1
+    image: docker.elastic.co/kibana/kibana:8.14.0
     restart: always
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200

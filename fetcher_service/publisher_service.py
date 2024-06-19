@@ -1,7 +1,9 @@
 import json
+import pandas as pd
 import time
 import subprocess
 
+from collections import defaultdict
 from kafka import KafkaProducer
 import yfinance as yf
 
@@ -11,15 +13,37 @@ def get_ip_of_broker(name: str) -> str:
     return ip.stdout.decode('utf-8')[1:-2]
 
 
-def restructure_data(data):
-    data = json.loads(data)
+def clean_data(dirty_data: str) -> pd.DataFrame:
+    """Function to clean and restructure stock market data"""
+    if isinstance(dirty_data, str):
+        dirty_data = json.loads(dirty_data)
 
-    restructured_data = {}
-    for attribute, values in data.items():
+    cleaned_data = []
+    timestamps = list(dirty_data['Open'].keys())
+
+    for timestamp in timestamps:
+        row = {'Timestamp': pd.to_datetime(int(timestamp), unit='ms').strftime('%Y-%m-%d %H:%M:%S')}
+        for key in ['Open', 'High', 'Low', 'Close', 'Volume', 'Dividends', 'Stock Splits']:
+            row[key] = dirty_data[key].get(timestamp, 0)
+        cleaned_data.append(row)
+
+    df = pd.DataFrame(cleaned_data)
+    df.sort_values('Timestamp', inplace=True)
+
+    print("Successfully cleaned the data!")
+
+    return df
+
+
+def restructure_data(dirty_data: str) -> dict[str, dict[str, str]]:
+    def empty_dict() -> {}:
+        return {}
+
+    df_cleaned_data = clean_data(dirty_data)
+    restructured_data = defaultdict(empty_dict)
+
+    for attribute, values in df_cleaned_data.to_dict().items():
         for timestamp, value in values.items():
-            if timestamp not in restructured_data:
-                restructured_data[timestamp] = {}
-
             restructured_data[timestamp][attribute] = value
 
     return restructured_data
