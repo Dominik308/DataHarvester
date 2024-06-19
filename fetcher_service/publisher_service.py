@@ -70,6 +70,7 @@ for period in ['1y', '1mo', '5d']:
 
     # Send the historical market data to the Kafka topic
     producer.send(f'stonks_{period}', history_json)
+    producer.flush()
 
 # Fetch and send real-time market data
 try:
@@ -85,13 +86,11 @@ try:
             }
             producer.send('real_time', data)
 
+            producer.flush()
+
         time.sleep(10)
 except Exception as e:
     print(f"An error occurred: {e}")
-
-
-# Ensure all messages are sent
-producer.flush()
 
 # Close the producer connection
 producer.close()
