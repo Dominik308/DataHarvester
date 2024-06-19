@@ -32,9 +32,23 @@ es = Elasticsearch(
 if not es.indices.exists(index='stock_data'):
     es.indices.create(index='stock_data')
 
-es.options(
+es.indices.put_settings(
+    index='stock_data',
     headers={'Content-Type': 'application/json'},
+    body={
+        'index': {
+            'mapping': {
+                'total_fields': {
+                    'limit': '100000'  # Increase the limit as needed
+                }
+            }
+        }
+    }
 )
+
+# es.options(
+#     headers={'Content-Type': 'application/json'},
+# )
 
 # Consume messages from the topics
 for message in consumer:
