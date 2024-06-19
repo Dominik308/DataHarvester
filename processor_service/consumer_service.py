@@ -39,7 +39,7 @@ es.options(
 # Consume messages from the topics
 for message in consumer:
     data = message.value  # Get the data as dict
-    print("Data:", data, flush=True)
+    # print("Data:", data, flush=True)
 
     # Send the data to Elasticsearch as json structure, e.g. dict is okay
     es.index(index='stock_data', body=data)
