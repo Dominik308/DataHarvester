@@ -69,4 +69,4 @@ producer = KafkaProducer(
 stonks = os.environ["STONKS"].split(",")
 
 for stonk in stonks:
-    Thread(target=send_stonk_data, args=[stonk]).start()
+    Thread(target=send_stonk_data, args=[stonk.lower()]).start()

@@ -20,7 +20,7 @@ stonks = os.environ["STONKS"].split(",")
 
 # Create a Kafka consumer
 ip_of_broker = get_ip_of_broker("broker")
-topics = [f'{stonk}_{time_span}' for time_span in ['stonks_1y', 'stonks_1mo', 'stonks_5d', 'real_time'] for stonk in stonks]
+topics = [f'{stonk}_{time_span}'.lower() for time_span in ['stonks_1y', 'stonks_1mo', 'stonks_5d', 'real_time'] for stonk in stonks]
 consumer = KafkaConsumer(*topics, bootstrap_servers=f'{ip_of_broker}:19092', auto_offset_reset='earliest',
                          value_deserializer=lambda v: json.loads(v.decode('utf-8')))  # Deserializer function
 # consumer.subscribe(topics=topics)
