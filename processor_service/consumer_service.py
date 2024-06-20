@@ -1,6 +1,7 @@
 import json
 import subprocess
 import time
+import os
 
 from elasticsearch import Elasticsearch
 from kafka import KafkaConsumer
@@ -15,9 +16,11 @@ def get_ip_of_broker(name: str) -> str:
 # Wait for ending creation of broker
 time.sleep(30)
 
+stonks = os.environ["STONKS"].split(",")
+
 # Create a Kafka consumer
 ip_of_broker = get_ip_of_broker("broker")
-topics = ['stonks_1y', 'stonks_1mo', 'stonks_5d', 'real_time']
+topics = [f'{stonk}_{time_span}' for time_span in ['stonks_1y', 'stonks_1mo', 'stonks_5d', 'real_time'] for stonk in stonks]
 consumer = KafkaConsumer(*topics, bootstrap_servers=f'{ip_of_broker}:19092', auto_offset_reset='earliest',
                          value_deserializer=lambda v: json.loads(v.decode('utf-8')))  # Deserializer function
 # consumer.subscribe(topics=topics)
@@ -29,31 +32,28 @@ es = Elasticsearch(
     # basic_auth=("elastic", "MagicWord")
 )
 
-if not es.indices.exists(index='stock_data'):
-    es.indices.create(index='stock_data')
+for topic in topics:
+    if not es.indices.exists(index=f'stock_data_{topic}'):
+        es.indices.create(index=f'stock_data_{topic}')
 
-es.indices.put_settings(
-    index='stock_data',
-    headers={'Content-Type': 'application/json'},
-    body={
-        'index': {
-            'mapping': {
-                'total_fields': {
-                    'limit': '100000'  # Increase the limit as needed
+    es.indices.put_settings(
+        index=f'stock_data_{topic}',
+        headers={'Content-Type': 'application/json'},
+        body={
+            'index': {
+                'mapping': {
+                    'total_fields': {
+                        'limit': '100000'  # Increase the limit as needed
+                    }
                 }
             }
         }
-    }
-)
-
-# es.options(
-#     headers={'Content-Type': 'application/json'},
-# )
+    )
 
 # Consume messages from the topics
 for message in consumer:
     data = message.value  # Get the data as dict
-    # print("Data:", data, flush=True)
 
     # Send the data to Elasticsearch as json structure, e.g. dict is okay
-    es.index(index='stock_data', body=data)
+    es.index(index=f'stock_data_{message.topic}', body=data)
+    
