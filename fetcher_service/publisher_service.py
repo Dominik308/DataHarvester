@@ -8,6 +8,9 @@ import yfinance as yf
 from kafka import KafkaProducer
 
 
+time_between_data_frames = 10  # wait 10 seconds before sending next real time data
+
+
 def get_ip_of_broker(name: str) -> str:
     ip = subprocess.run(f'ping -c1 {name} | head -n1 | cut -d" " -f3', shell=True, stdout=subprocess.PIPE)
     return ip.stdout.decode('utf-8')[1:-2]
@@ -44,7 +47,7 @@ def send_stonk_data(stonk: str) -> None:
                 }
                 producer.send(f'{stonk}_real_time', data)
                 producer.flush()
-                time.sleep(10)  # Wait 10 second before next sending data
+                time.sleep(time_between_data_frames)  # Wait 10 second before next sending data
     except Exception as e:
         print(f"An error occurred: {e}")
 
