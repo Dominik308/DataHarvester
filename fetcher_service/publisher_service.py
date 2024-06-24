@@ -9,7 +9,7 @@ from kafka import KafkaProducer
 
 
 def get_ip_of_broker(name: str) -> str:
-    ip = subprocess.run('ping -c1 broker | head -n1 | cut -d" " -f3', shell=True, stdout=subprocess.PIPE)
+    ip = subprocess.run(f'ping -c1 {name} | head -n1 | cut -d" " -f3', shell=True, stdout=subprocess.PIPE)
     return ip.stdout.decode('utf-8')[1:-2]
 
 
@@ -24,12 +24,10 @@ def send_stonk_data(stonk: str) -> None:
             data = {
                 'symbol': stock.info['symbol'],
                 'price': frame_of_day['High'],
-                'timestamp': date.strftime('%d.%m.%Y')
+                'timestamp': date.strftime('%Y-%m-%d') + " 00:00:00"
             }
             producer.send(f'{stonk}_{period}', data)
             producer.flush()
-
-    time.sleep(10)
 
     # Fetch and send real-time market data
     # TODO: Fetch every day each 10 seconds and delete old data after one day
@@ -37,18 +35,16 @@ def send_stonk_data(stonk: str) -> None:
         while True:
             ticker = yf.Ticker(stonk)
             info = ticker.info
+
             if 'currentPrice' in info:
-                print(f"Current price of {info['symbol']} is {info['currentPrice']} at {time.strftime('%d.%m.%Y %H:%M', time.localtime())}")
                 data = {
                     'symbol': info['symbol'],
                     'price': info['currentPrice'],
-                    'timestamp': time.strftime('%d.%m.%Y %H:%M', time.localtime())
+                    'timestamp': time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
                 }
                 producer.send(f'{stonk}_real_time', data)
-
                 producer.flush()
-
-            time.sleep(10)
+                time.sleep(10)  # Wait 10 second before next sending data
     except Exception as e:
         print(f"An error occurred: {e}")
 
@@ -58,10 +54,11 @@ def send_stonk_data(stonk: str) -> None:
     
 time.sleep(10)  # Wait for ending creation of broker
 ip_of_broker = get_ip_of_broker("broker")
+port_of_broker = os.environ["KAFKA_BROKER_PORT"]
 
 # Create an instance of the KafkaProducer
 producer = KafkaProducer(
-    bootstrap_servers=f'{ip_of_broker}:19092',  # Kafka server address
+    bootstrap_servers=f'{ip_of_broker}:{port_of_broker}',  # Kafka server address
     value_serializer=lambda v: json.dumps(v).encode('utf-8')  # Serializer function
 )
 

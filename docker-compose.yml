@@ -85,7 +85,7 @@ services:
     networks:
       - broker-kafka
     environment:
-      KAFKA_BROKER: "kafka:9092"
+      KAFKA_BROKER_PORT: 19092
       STONKS: "AAPL,MSFT"
 
   consumer:
@@ -99,7 +99,8 @@ services:
     networks:
       - broker-kafka
     environment:
-      KAFKA_BROKER: "kafka:9092"
+      KAFKA_BROKER_PORT: 19092
+      ELASTICSEARCH_DATA_PREPARER_PORT: 9200
       STONKS: "AAPL,MSFT"
 
 networks:
