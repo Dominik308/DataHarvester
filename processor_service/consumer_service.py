@@ -18,6 +18,17 @@ time.sleep(30)
 
 stonks = os.environ["STONKS"].split(",")
 
+# Define expected data schema (replace with your actual data structure)
+data_schema = {
+    "properties": {
+        "timestamp": {"type": "date"},  # Adjust data type as needed
+        "symbol": {"type": "keyword"},
+        "price": {"type": "float"},
+        "volume": {"type": "long"},
+        # Add more fields based on your data structure
+    }
+}
+
 # Create a Kafka consumer
 ip_of_broker = get_ip_of_broker("broker")
 topics = [f'{stonk}_{time_span}'.lower() for time_span in ['stonks_1y', 'stonks_1mo', 'stonks_5d', 'real_time'] for stonk in stonks]
@@ -36,19 +47,8 @@ for topic in topics:
     if not es.indices.exists(index=f'stock_data_{topic}'):
         es.indices.create(index=f'stock_data_{topic}')
 
-    es.indices.put_settings(
-        index=f'stock_data_{topic}',
-        headers={'Content-Type': 'application/json'},
-        body={
-            'index': {
-                'mapping': {
-                    'total_fields': {
-                        'limit': '100000'  # Increase the limit as needed
-                    }
-                }
-            }
-        }
-    )
+    # Create mappings for the index with the defined schema
+    es.indices.put_mapping(index=f'stock_data_{topic}', body=data_schema)
 
 # Consume messages from the topics
 for message in consumer:
@@ -56,4 +56,3 @@ for message in consumer:
 
     # Send the data to Elasticsearch as json structure, e.g. dict is okay
     es.index(index=f'stock_data_{message.topic}', body=data)
-    

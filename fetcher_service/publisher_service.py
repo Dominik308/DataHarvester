@@ -1,13 +1,11 @@
 import json
-import pandas as pd
-import time
-import subprocess
 import os
-
-from collections import defaultdict
-from kafka import KafkaProducer
+import subprocess
+import time
 from threading import Thread
+
 import yfinance as yf
+from kafka import KafkaProducer
 
 
 def get_ip_of_broker(name: str) -> str:
@@ -26,10 +24,12 @@ def send_stonk_data(stonk: str) -> None:
             data = {
                 'symbol': stock.info['symbol'],
                 'price': frame_of_day['High'],
-                'time': date.strftime('%d.%m.%Y')
+                'timestamp': date.strftime('%d.%m.%Y')
             }
             producer.send(f'{stonk}_{period}', data)
             producer.flush()
+
+    time.sleep(10)
 
     # Fetch and send real-time market data
     # TODO: Fetch every day each 10 seconds and delete old data after one day
@@ -42,7 +42,7 @@ def send_stonk_data(stonk: str) -> None:
                 data = {
                     'symbol': info['symbol'],
                     'price': info['currentPrice'],
-                    'time': time.strftime('%d.%m.%Y %H:%M', time.localtime())
+                    'timestamp': time.strftime('%d.%m.%Y %H:%M', time.localtime())
                 }
                 producer.send(f'{stonk}_real_time', data)
 
