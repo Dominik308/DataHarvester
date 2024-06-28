@@ -1,9 +1,12 @@
+from datetime import datetime
+
 import json
 import os
 import subprocess
 import time
 from threading import Thread
 
+import pytz
 import yfinance as yf
 from kafka import KafkaProducer
 
@@ -30,7 +33,7 @@ def send_stonk_data(stonk: str) -> None:
             data = {
                 'symbol': stock.info['symbol'],
                 'price': frame_of_day['average'],
-                'timestamp': date.strftime('%Y-%m-%d') + "00:00:00"
+                'timestamp': date.strftime('%d.%m.%Y')
             }
             producer.send(f'{stonk}_{period}', data)
             producer.flush()
@@ -39,15 +42,18 @@ def send_stonk_data(stonk: str) -> None:
     # Fetch and send real-time market data
     # TODO: Fetch every day each 10 seconds and delete old data after one day
     try:
+
         while True:
             ticker = yf.Ticker(stonk)
             info = ticker.info
+            now_utc = datetime.now(pytz.timezone('UTC'))
+            now_local = now_utc.astimezone(pytz.timezone('Europe/Berlin'))
 
             if 'currentPrice' in info:
                 data = {
                     'symbol': info['symbol'],
                     'price': info['currentPrice'],
-                    'timestamp': time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+                    'timestamp': time.strftime('%Y-%m-%d %H:%M:%S', now_local.timetuple())
                 }
                 producer.send(f'{stonk}_real_time', data)
                 producer.flush()
@@ -57,8 +63,8 @@ def send_stonk_data(stonk: str) -> None:
 
     # Close the producer connection
     producer.close()
-    
-    
+
+
 time.sleep(10)  # Wait for ending creation of broker
 ip_of_broker = get_ip_of_broker("broker")
 port_of_broker = os.environ["KAFKA_BROKER_PORT"]

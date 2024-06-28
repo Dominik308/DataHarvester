@@ -50,10 +50,39 @@ es = Elasticsearch(
 )
 
 for topic in topics:
+    if es.indices.exists(index=f'stock_data_{topic}'):
+        es.indices.delete(index=f'stock_data_{topic}')
+
     if not es.indices.exists(index=f'stock_data_{topic}'):  # Create index with mapping for ElasticSearch
         # es.indices.create(index=f'stock_data_{topic}', body=settings)
         es.indices.create(index=f'stock_data_{topic}')
     # es.indices.put_mapping(index=f'stock_data_{topic}', body=settings)
+
+    if topic == 'aapl_real_time':
+        es.indices.put_mapping(
+            index=f'stock_data_{topic}',
+            body={
+                'properties': {
+                    "timestamp": {
+                        "type": "date",
+                        "format": "yyyy-MM-dd HH:mm:ss"
+                    }
+                }
+            }
+        )
+    else:
+        es.indices.put_mapping(
+            index=f'stock_data_{topic}',
+            body={
+                'properties': {
+                    "timestamp": {
+                        "type": "date",
+                        "format": "dd.MM.yyyy"
+                    }
+                }
+            }
+        )
+
     es.indices.put_settings(
         index=f'stock_data_{topic}',
         headers={'Content-Type': 'application/json'},
@@ -67,6 +96,9 @@ for topic in topics:
             }
         }
     )
+
+
+
 
 # Consume messages from the topics
 for message in consumer:
