@@ -1,3 +1,4 @@
+import datetime as dt
 import json
 import os
 import subprocess
@@ -22,7 +23,7 @@ def send_stonk_data(stonk: str) -> None:
 
     # Fetch and send historical market data for different periods
     # TODO: Fetch every day one time and delete old data after one day
-    for period in ['1y', '1mo', '5d']:
+    for period in ['2y']:
         period_data = stock.history(period=period)
         period_data['average'] = (period_data['High'] + period_data['Low'] + period_data['Close'] + period_data['Open']) / 4
 
@@ -47,7 +48,7 @@ def send_stonk_data(stonk: str) -> None:
                 data = {
                     'symbol': info['symbol'],
                     'price': info['currentPrice'],
-                    'timestamp': time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+                    'timestamp': (dt.datetime.now() + dt.timedelta(hours=2)).strftime('%Y-%m-%d %H:%M:%S')
                 }
                 producer.send(f'{stonk}_real_time', data)
                 producer.flush()
