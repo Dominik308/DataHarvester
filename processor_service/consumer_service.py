@@ -35,7 +35,7 @@ stonks = os.environ["STONKS"].split(",")
 # Create a Kafka consumer
 ip_of_broker = get_ip_of_broker("broker")
 port_of_broker = os.environ["KAFKA_BROKER_PORT"]
-topics = [f'{stonk}_{time_span}'.lower() for time_span in ['1y', '1mo', '5d', 'real_time'] for
+topics = [f'{stonk}_{time_span}'.lower() for time_span in ['2y', 'real_time'] for
           stonk in stonks]
 consumer = KafkaConsumer(*topics, bootstrap_servers=f'{ip_of_broker}:{port_of_broker}', auto_offset_reset='earliest',
                          value_deserializer=lambda v: json.loads(v.decode('utf-8')))  # Deserializer function
@@ -53,36 +53,21 @@ for topic in topics:
     if es.indices.exists(index=f'stock_data_{topic}'):
         es.indices.delete(index=f'stock_data_{topic}')
 
-    if not es.indices.exists(index=f'stock_data_{topic}'):  # Create index with mapping for ElasticSearch
-        # es.indices.create(index=f'stock_data_{topic}', body=settings)
-        es.indices.create(index=f'stock_data_{topic}')
+    # es.indices.create(index=f'stock_data_{topic}', body=settings)
+    es.indices.create(index=f'stock_data_{topic}')
     # es.indices.put_mapping(index=f'stock_data_{topic}', body=settings)
 
-    if topic == 'aapl_real_time':
-        es.indices.put_mapping(
-            index=f'stock_data_{topic}',
-            body={
-                'properties': {
-                    "timestamp": {
-                        "type": "date",
-                        "format": "yyyy-MM-dd HH:mm:ss"
-                    }
+    es.indices.put_mapping(
+        index=f'stock_data_{topic}',
+        body={
+            'properties': {
+                "timestamp": {
+                    "type": "date",
+                    "format": "yyyy-MM-dd HH:mm:ss"
                 }
             }
-        )
-    else:
-        es.indices.put_mapping(
-            index=f'stock_data_{topic}',
-            body={
-                'properties': {
-                    "timestamp": {
-                        "type": "date",
-                        "format": "dd.MM.yyyy"
-                    }
-                }
-            }
-        )
-
+        }
+    )
     es.indices.put_settings(
         index=f'stock_data_{topic}',
         headers={'Content-Type': 'application/json'},

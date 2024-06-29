@@ -25,7 +25,8 @@ def send_stonk_data(stonk: str) -> None:
 
     # Fetch and send historical market data for different periods
     # TODO: Fetch every day one time and delete old data after one day
-    for period in ['1y', '1mo', '5d']:
+    #for period in ['1y', '1mo', '5d']:
+    for period in ['2y']:
         period_data = stock.history(period=period)
         period_data['average'] = (period_data['High'] + period_data['Low'] + period_data['Close'] + period_data['Open']) / 4
 
@@ -33,7 +34,7 @@ def send_stonk_data(stonk: str) -> None:
             data = {
                 'symbol': stock.info['symbol'],
                 'price': frame_of_day['average'],
-                'timestamp': date.strftime('%d.%m.%Y')
+                'timestamp': date.strftime('%Y-%m-%d %H:%M:%S')
             }
             producer.send(f'{stonk}_{period}', data)
             producer.flush()
