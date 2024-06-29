@@ -16,21 +16,8 @@ def get_ip_of_broker(name: str) -> str:
 # Wait for ending creation of broker
 time.sleep(30)
 
+# Read stocks to send data to ElasticSearch from environment variable
 stonks = os.environ["STONKS"].split(",")
-
-# Define expected data schema (replace with your actual data structure)
-# settings = {
-#     "properties": {
-#         "timestamp": {"type": "date"},  # Adjust data type as needed
-#         "symbol": {"type": "keyword"},
-#         "price": {"type": "float"},
-#         "volume": {"type": "long"},
-#         # Add more fields based on your data structure
-#     },
-#     # "settings": {
-#     #     'index.mapping.total_fields.limit': 100000
-#     # }
-# }
 
 # Create a Kafka consumer
 ip_of_broker = get_ip_of_broker("broker")
@@ -51,9 +38,8 @@ es = Elasticsearch(
 
 for topic in topics:
     if not es.indices.exists(index=f'stock_data_{topic}'):  # Create index with mapping for ElasticSearch
-        # es.indices.create(index=f'stock_data_{topic}', body=settings)
         es.indices.create(index=f'stock_data_{topic}')
-    # es.indices.put_mapping(index=f'stock_data_{topic}', body=settings)
+
     es.indices.put_settings(
         index=f'stock_data_{topic}',
         headers={'Content-Type': 'application/json'},
