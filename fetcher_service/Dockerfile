@@ -8,7 +8,7 @@ RUN apt-get update && apt-get upgrade -y
 # Extra for getting IP of broker (kafka server)
 RUN apt-get install iputils-ping -y
 
-# Install Python 3.10 and pip
+# Install Python 3.11 and pip
 RUN apt-get install -y software-properties-common
 # RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get update && apt-get install -y python3.11 python3-pip

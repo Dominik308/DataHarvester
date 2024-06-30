@@ -54,14 +54,14 @@ def send_stonk_data(stonk: str) -> None:
 
     # Close the producer connection
     producer.close()
-    
-    
-time.sleep(10)  # Wait for ending creation of broker
+
+
 ip_of_broker = get_ip_of_broker("broker")
 
 # Create an instance of the KafkaProducer
+port_of_broker = os.environ["KAFKA_BROKER_PORT"]
 producer = KafkaProducer(
-    bootstrap_servers=f'{ip_of_broker}:19092',  # Kafka server address
+    bootstrap_servers=f'{ip_of_broker}:{port_of_broker}',  # Kafka server address
     value_serializer=lambda v: json.dumps(v).encode('utf-8')  # Serializer function
 )
 

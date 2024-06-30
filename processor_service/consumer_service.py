@@ -20,15 +20,17 @@ stonks = os.environ["STONKS"].split(",")
 
 # Create a Kafka consumer
 ip_of_broker = get_ip_of_broker("broker")
+port_of_broker = os.environ["KAFKA_BROKER_PORT"]
 topics = [f'{stonk}_{time_span}'.lower() for time_span in ['stonks_1y', 'stonks_1mo', 'stonks_5d', 'real_time'] for stonk in stonks]
-consumer = KafkaConsumer(*topics, bootstrap_servers=f'{ip_of_broker}:19092', auto_offset_reset='earliest',
+consumer = KafkaConsumer(*topics, bootstrap_servers=f'{ip_of_broker}:{port_of_broker}', auto_offset_reset='earliest',
                          value_deserializer=lambda v: json.loads(v.decode('utf-8')))  # Deserializer function
 # consumer.subscribe(topics=topics)
 
 # Create an Elasticsearch client
 ip_of_data_preparer = get_ip_of_broker("data-preparer")
+port_of_data_preparer = os.environ["DATA_PREPARER_PORT"]
 es = Elasticsearch(
-    hosts=[{"host": "host.docker.internal", "port": 9200, "scheme": "http"}]
+    hosts=[{"host": "host.docker.internal", "port": port_of_data_preparer, "scheme": "http"}]
     # basic_auth=("elastic", "MagicWord")
 )
 
