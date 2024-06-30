@@ -75,6 +75,10 @@ services:
       - elasticsearch
     networks:
       - broker-kafka
+    volumes:
+      - ./export.ndjson:/usr/share/kibana/config/export.ndjson
+      - ./import_dashboards.sh:/usr/share/kibana/config/import_dashboards.sh
+    entrypoint: ["/bin/bash", "/usr/share/kibana/config/import_dashboards.sh"]
 
   publisher:
     build: ./fetcher_service
