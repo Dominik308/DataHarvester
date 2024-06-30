@@ -1,17 +1,19 @@
+import datetime as dt
 import json
-import pandas as pd
-import time
-import subprocess
 import os
-
-from collections import defaultdict
-from kafka import KafkaProducer
+import subprocess
+import time
 from threading import Thread
+
 import yfinance as yf
+from kafka import KafkaProducer
+
+
+time_between_data_frames = 10  # wait 10 seconds before sending next real time data
 
 
 def get_ip_of_broker(name: str) -> str:
-    ip = subprocess.run('ping -c1 broker | head -n1 | cut -d" " -f3', shell=True, stdout=subprocess.PIPE)
+    ip = subprocess.run(f'ping -c1 {name} | head -n1 | cut -d" " -f3', shell=True, stdout=subprocess.PIPE)
     return ip.stdout.decode('utf-8')[1:-2]
 
 
@@ -21,15 +23,19 @@ def send_stonk_data(stonk: str) -> None:
 
     # Fetch and send historical market data for different periods
     # TODO: Fetch every day one time and delete old data after one day
-    for period in ['1y', '1mo', '5d']:
-        for date, frame_of_day in stock.history(period=period).iterrows():
+    for period in ['2y']:
+        period_data = stock.history(period=period)
+        period_data['average'] = (period_data['High'] + period_data['Low'] + period_data['Close'] + period_data['Open']) / 4
+
+        for date, frame_of_day in period_data.iterrows():
             data = {
                 'symbol': stock.info['symbol'],
-                'price': frame_of_day['High'],
-                'time': date.strftime('%d.%m.%Y')
+                'price': frame_of_day['average'],
+                'timestamp': date.strftime('%Y-%m-%d') + " 00:00:00"
             }
             producer.send(f'{stonk}_{period}', data)
             producer.flush()
+
 
     # Fetch and send real-time market data
     # TODO: Fetch every day each 10 seconds and delete old data after one day
@@ -37,18 +43,16 @@ def send_stonk_data(stonk: str) -> None:
         while True:
             ticker = yf.Ticker(stonk)
             info = ticker.info
+
             if 'currentPrice' in info:
-                print(f"Current price of {info['symbol']} is {info['currentPrice']} at {time.strftime('%d.%m.%Y %H:%M', time.localtime())}")
                 data = {
                     'symbol': info['symbol'],
                     'price': info['currentPrice'],
-                    'time': time.strftime('%d.%m.%Y %H:%M', time.localtime())
+                    'timestamp': (dt.datetime.now() + dt.timedelta(hours=2)).strftime('%Y-%m-%d %H:%M:%S')
                 }
                 producer.send(f'{stonk}_real_time', data)
-
                 producer.flush()
-
-            time.sleep(10)
+                time.sleep(time_between_data_frames)  # Wait 10 second before next sending data
     except Exception as e:
         print(f"An error occurred: {e}")
 
@@ -57,6 +61,7 @@ def send_stonk_data(stonk: str) -> None:
 
 
 ip_of_broker = get_ip_of_broker("broker")
+port_of_broker = os.environ["KAFKA_BROKER_PORT"]
 
 # Create an instance of the KafkaProducer
 port_of_broker = os.environ["KAFKA_BROKER_PORT"]

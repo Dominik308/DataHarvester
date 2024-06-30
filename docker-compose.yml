@@ -82,6 +82,10 @@ services:
       - elasticsearch
     networks:
       - broker-kafka
+    volumes:
+      - ./export.ndjson:/usr/share/kibana/config/export.ndjson
+      - ./import_dashboards.sh:/usr/share/kibana/config/import_dashboards.sh
+    entrypoint: ["/bin/bash", "/usr/share/kibana/config/import_dashboards.sh"]
 
   publisher:
     build: ./fetcher_service
@@ -93,6 +97,7 @@ services:
     networks:
       - broker-kafka
     environment:
+      KAFKA_BROKER_PORT: 19092
       KAFKA_BROKER_PORT: 19092
       STONKS: "AAPL,MSFT"
 
@@ -107,7 +112,7 @@ services:
       - broker-kafka
     environment:
       KAFKA_BROKER_PORT: 19092
-      DATA_PREPARER_PORT: 9200
+      ELASTICSEARCH_DATA_PREPARER_PORT: 9200
       STONKS: "AAPL,MSFT"
 
 networks:
