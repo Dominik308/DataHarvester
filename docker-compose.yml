@@ -1,11 +1,12 @@
 services:
   kafka:
-    image: apache/kafka:latest
+    build: ./kafka_broker
     hostname: broker
     container_name: broker
     ports:
       - '9092:9092'
     environment:
+      KAFKA_BROKER_PORT: 9092
       KAFKA_NODE_ID: 1
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
       KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT_HOST://localhost:9092,PLAINTEXT://broker:19092'
@@ -22,6 +23,12 @@ services:
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
     networks:
       - broker-kafka
+    healthcheck:
+      start_period: 15s # Wait initial (container startup) timeout
+      test: python3 health_check.py || exit 1
+      timeout: 5s # Wait 5 seconds, if no connection to kafka broker was established, connection failed
+      interval: 15s # If a test has failed, wait 15 seconds and execute test again
+      retries: 5 # Execute test 5 times
 
   # Reach UI under: http://localhost:8080
   akhq:
@@ -41,16 +48,17 @@ services:
       - broker-kafka
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+    build: ./elasticsearch
     hostname: data-preparer
     container_name: data-preparer
     environment:
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-#      - ELASTIC_USERNAME=elastic
-#      - ELASTIC_PASSWORD=MagicWord
-#      - xpack.security.enabled=true
-      - xpack.security.enabled=false
+      ELASTICSEARCH_DATA_PREPARER_PORT: 9200
+      discovery.type: "single-node"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+#      ELASTIC_USERNAME: "elastic"
+#      ELASTIC_PASSWORD: "MagicWord"
+#      xpack.security.enabled: "true"
+      xpack.security.enabled: "false"
     ports:
       - "9200:9200"
     ulimits:
@@ -61,44 +69,66 @@ services:
       - esdata:/usr/share/elasticsearch/data # For saving data outside, e.g. in a database
     networks:
       - broker-kafka
+    healthcheck:
+      start_period: 15s # Wait initial (container startup) timeout
+      test: python3 health_check.py || exit 1
+      timeout: 5s # Wait 5 seconds, if no connection to kafka broker was established, connection failed
+      interval: 15s # If a test has failed, wait 15 seconds and execute test again
+      retries: 5 # Execute test 5 times
 
   kibana:
     hostname: kibana
     container_name: kibana
-    image: docker.elastic.co/kibana/kibana:7.10.1
+#    image: docker.elastic.co/kibana/kibana:8.14.0
+    build: ./kibana
     restart: always
     environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
+      KIBANA_PORT: 5601
     ports:
       - 5601:5601
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_started
     networks:
       - broker-kafka
+    volumes:
+      - ./export.ndjson:/usr/share/kibana/config/export.ndjson
+    healthcheck:
+      start_period: 15s # Wait initial (container startup) timeout
+      test: sh import_dashboards.sh || exit 1
+      timeout: 5s # Wait 5 seconds, if no connection to kafka broker was established, connection failed
+      interval: 15s # If a test has failed, wait 15 seconds and execute test again
+      retries: 5 # Execute test 5 times
 
   publisher:
     build: ./fetcher_service
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - broker-kafka
     environment:
-      KAFKA_BROKER: "kafka:9092"
+      KAFKA_BROKER_PORT: 19092
+      STONKS: "AAPL,MSFT"
 
   consumer:
     build: ./processor_service
     depends_on:
-      - kafka
-      - publisher
-      - elasticsearch
+      publisher:
+        condition: service_started
+      elasticsearch:
+          condition: service_healthy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - broker-kafka
     environment:
-      KAFKA_BROKER: "kafka:9092"
+      KAFKA_BROKER_PORT: 19092
+      ELASTICSEARCH_DATA_PREPARER_PORT: 9200
+      STONKS: "AAPL,MSFT"
 
 networks:
   broker-kafka:
