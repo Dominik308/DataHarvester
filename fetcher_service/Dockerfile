@@ -10,8 +10,7 @@ RUN apt-get install iputils-ping -y
 
 # Install Python 3.11 and pip
 RUN apt-get install -y software-properties-common
-# RUN add-apt-repository ppa:deadsnakes/ppa
-RUN apt-get update && apt-get install -y python3.11 python3-pip
+RUN apt-get install -y python3 python3-distutils python3-pip
 
 # Install Python dependencies
 RUN pip install kafka-python-ng
