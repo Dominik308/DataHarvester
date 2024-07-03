@@ -48,7 +48,6 @@ services:
       - broker-kafka
 
   elasticsearch:
-#    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.0
     build: ./elasticsearch
     hostname: data-preparer
     container_name: data-preparer
@@ -80,10 +79,12 @@ services:
   kibana:
     hostname: kibana
     container_name: kibana
-    image: docker.elastic.co/kibana/kibana:8.14.0
+#    image: docker.elastic.co/kibana/kibana:8.14.0
+    build: ./kibana
     restart: always
     environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
+      KIBANA_PORT: 5601
     ports:
       - 5601:5601
     depends_on:
@@ -93,8 +94,12 @@ services:
       - broker-kafka
     volumes:
       - ./export.ndjson:/usr/share/kibana/config/export.ndjson
-      - ./import_dashboards.sh:/usr/share/kibana/config/import_dashboards.sh
-    entrypoint: ["/bin/bash", "/usr/share/kibana/config/import_dashboards.sh"]
+    healthcheck:
+      start_period: 15s # Wait initial (container startup) timeout
+      test: sh import_dashboards.sh || exit 1
+      timeout: 5s # Wait 5 seconds, if no connection to kafka broker was established, connection failed
+      interval: 15s # If a test has failed, wait 15 seconds and execute test again
+      retries: 5 # Execute test 5 times
 
   publisher:
     build: ./fetcher_service

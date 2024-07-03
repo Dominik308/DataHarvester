@@ -13,9 +13,6 @@ def get_ip_of_broker(name: str) -> str:
     return ip.stdout.decode('utf-8')[1:-2]
 
 
-# Wait for ending creation of broker
-time.sleep(30)
-
 # Read stocks to send data to ElasticSearch from environment variable
 stonks = os.environ["STONKS"].split(",")
 
