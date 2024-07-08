@@ -9,6 +9,7 @@ import yfinance as yf
 from kafka import KafkaProducer
 
 
+# Define global variables
 time_between_data_frames = 10  # wait 10 seconds before sending next real time data
 
 
@@ -23,8 +24,10 @@ def output_command(command: str) -> str:
 
 
 def get_ip_of_broker(name: str) -> str:
-    ip = subprocess.run(f'ping -c1 {name} | head -n1 | cut -d" " -f3', shell=True, stdout=subprocess.PIPE)
-    return ip.stdout.decode('utf-8')[1:-2]
+    """Gets IP via ping command in linux shell"""
+    command = f'ping -c1 {name} | head -n1 | cut -d" " -f3'
+    ip = output_command(command)
+    return ip[1:-2]
 
 
 def send_stonk_data(stonk: str) -> None:
@@ -32,7 +35,6 @@ def send_stonk_data(stonk: str) -> None:
     stock = yf.Ticker(stonk)  # Replace 'AAPL' with your desired stock symbol
 
     # Fetch and send historical market data for different periods
-    # TODO: Fetch every day one time and delete old data after one day
     for period in ['2y']:
         period_data = stock.history(period=period)
         period_data['average'] = (period_data['High'] + period_data['Low'] + period_data['Close'] + period_data['Open']) / 4
@@ -46,9 +48,7 @@ def send_stonk_data(stonk: str) -> None:
             producer.send(f'{stonk}_{period}', data)
             producer.flush()
 
-
     # Fetch and send real-time market data
-    # TODO: Fetch every day each 10 seconds and delete old data after one day
     try:
         while True:
             ticker = yf.Ticker(stonk)

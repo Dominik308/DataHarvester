@@ -1,16 +1,26 @@
 import json
 import subprocess
-import time
 import os
 
 from elasticsearch import Elasticsearch
 from kafka import KafkaConsumer
 
 
+def output_command(command: str) -> str:
+    """Outputs a passed command and return result as string"""
+    res = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
+
+    if res.returncode != 0:
+        raise RuntimeError(f"Failed executing command: {command}")
+
+    return res.stdout.decode('utf-8')
+
+
 def get_ip_of_broker(name: str) -> str:
     """Gets IP via ping command in linux shell"""
-    ip = subprocess.run(f'ping -c1 {name} | head -n1 | cut -d" " -f3', shell=True, stdout=subprocess.PIPE)
-    return ip.stdout.decode('utf-8')[1:-2]
+    command = f'ping -c1 {name} | head -n1 | cut -d" " -f3'
+    ip = output_command(command)
+    return ip[1:-2]
 
 
 # Read stocks to send data to ElasticSearch from environment variable
