@@ -79,7 +79,6 @@ services:
   kibana:
     hostname: kibana
     container_name: kibana
-#    image: docker.elastic.co/kibana/kibana:8.14.0
     build: ./kibana
     restart: always
     environment:
