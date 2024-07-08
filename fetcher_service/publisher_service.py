@@ -12,6 +12,16 @@ from kafka import KafkaProducer
 time_between_data_frames = 10  # wait 10 seconds before sending next real time data
 
 
+def output_command(command: str) -> str:
+    """Outputs a passed command and return result as string"""
+    res = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
+
+    if res.returncode != 0:
+        raise RuntimeError(f"Failed executing command: {command}")
+
+    return res.stdout.decode('utf-8')
+
+
 def get_ip_of_broker(name: str) -> str:
     ip = subprocess.run(f'ping -c1 {name} | head -n1 | cut -d" " -f3', shell=True, stdout=subprocess.PIPE)
     return ip.stdout.decode('utf-8')[1:-2]
@@ -60,18 +70,43 @@ def send_stonk_data(stonk: str) -> None:
     producer.close()
 
 
+def get_stonks_for_specific_container() -> list[str]:
+    """Asks Docker API for container name and returns all stocks for this container"""
+
+    # Get Docker ID of container
+    # command = "basename $(cat /proc/1/cpuset)"
+    # container_id = output_command(command)
+    container_id = os.environ["HOSTNAME"]
+
+    # Get name of container
+    url = f"http://localhost/containers/{container_id}/json"
+    command = f"curl --unix-socket /var/run/docker.sock {url}"
+    container_info = output_command(command)
+    container_info = json.loads(container_info)
+    container_aliases = list(container_info["NetworkSettings"]["Networks"].values())[0]["Aliases"]
+    container_name = container_aliases[0]
+    publisher_number = int(container_name.rsplit("-", 1)[1]) - 1  # Get number of container, "-1" for using as index
+
+    # Get all stocks
+    all_stonks = os.environ["STONKS"].split(",")
+    stonk_number = int(os.environ["SERVICES"])  # Each "stonk_number", e.g. 3, stock to request from yfinance
+
+    # Return stocks for this container
+    return all_stonks[publisher_number::stonk_number]  # Start with publisher number and take each "stonk_number" stock
+
+
+# Get connection info from environment variables
 ip_of_broker = get_ip_of_broker("broker")
 port_of_broker = os.environ["KAFKA_BROKER_PORT"]
 
 # Create an instance of the KafkaProducer
-port_of_broker = os.environ["KAFKA_BROKER_PORT"]
 producer = KafkaProducer(
     bootstrap_servers=f'{ip_of_broker}:{port_of_broker}',  # Kafka server address
     value_serializer=lambda v: json.dumps(v).encode('utf-8')  # Serializer function
 )
 
 # Send data for each stonk
-stonks = os.environ["STONKS"].split(",")
+stonks = get_stonks_for_specific_container()
 
 for stonk in stonks:
     Thread(target=send_stonk_data, args=[stonk.lower()]).start()

@@ -8,19 +8,20 @@ from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 
 
-def create_dataset(dataset, time_step=1):
-    """Create datasets"""
+def create_dataset(dataset, time_step: int) -> tuple[np.array:, np.array]:
+    """Create datasets: "time_step many data" to predict next data (e.g. 60er packets)"""
+    data_x, data_y = [], []
 
-    dataX, dataY = [], []
     for i in range(len(dataset) - time_step - 1):
         a = dataset[i:(i + time_step), 0]
-        dataX.append(a)
-        dataY.append(dataset[i + time_step, 0])
-    return np.array(dataX), np.array(dataY)
+        data_x.append(a)
+        data_y.append(dataset[i + time_step, 0])
+
+    return np.array(data_x), np.array(data_y)
 
 
 # Parameter
-time_step = 60
+time_step = 120
 
 # 1. Get data
 ticker = 'AAPL'
@@ -55,7 +56,7 @@ model.add(Dense(1))
 model.compile(optimizer='adam', loss='mean_squared_error')
 
 # Train model with train data
-model.fit(train_X, train_y, batch_size=1, epochs=1)
+model.fit(train_X, train_y, batch_size=1, epochs=10)
 
 # Make predictions for last time
 train_predict = model.predict(train_X)
@@ -73,20 +74,22 @@ plt.legend()
 plt.show()
 
 # Make predictions for next 30 days
-last_60_days = scaled_data[-60:]
-next_30_days_prediction = []
+count_of_next_days = 120
+last_days = scaled_data[-time_step:]
+next_days_prediction = []
 
-for _ in range(30):
-    last_60_days = last_60_days.reshape(1, time_step, 1)
-    predicted_price = model.predict(last_60_days)
-    next_30_days_prediction.append(predicted_price[0, 0])
-    last_60_days = np.append(last_60_days[0, 1:], predicted_price, axis=0)
+for _ in range(count_of_next_days):
+    last_days = last_days.reshape(1, time_step, 1)
+    predicted_price = model.predict(last_days)
+    next_days_prediction.append(predicted_price[0, 0])
+    last_days = np.append(last_days[0, 1:], predicted_price, axis=0)
 
-next_30_days_prediction = scaler.inverse_transform(np.array(next_30_days_prediction).reshape(-1, 1))
+next_days_prediction = scaler.inverse_transform(np.array(next_days_prediction).reshape(-1, 1))
 
 # Plot predictions
 plt.figure(figsize=(14, 5))
 plt.plot(range(len(data)), data['Close'], label='Original Data')
-plt.plot(range(len(data), len(data) + 30), next_30_days_prediction, label='Next 30 Days Prediction', color='red')
+plt.plot(range(len(data), len(data) + count_of_next_days), next_days_prediction,
+         label=f'Next {count_of_next_days} Days Prediction', color='red')
 plt.legend()
 plt.show()

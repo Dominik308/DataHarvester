@@ -113,6 +113,10 @@ services:
     environment:
       KAFKA_BROKER_PORT: 19092
       STONKS: "AAPL,MSFT"
+      SERVICES: 2
+    deploy:
+      mode: replicated
+      replicas: 2
 
   consumer:
     build: ./processor_service
