@@ -7,7 +7,7 @@ from threading import Thread
 
 import yfinance as yf
 from kafka import KafkaProducer
-
+from model import stock_prediction
 
 # Define global variables
 time_between_data_frames = 10  # wait 10 seconds before sending next real time data
@@ -47,6 +47,20 @@ def send_stonk_data(stonk: str) -> None:
             }
             producer.send(f'{stonk}_{period}', data)
             producer.flush()
+            
+    # Send Predicted Stock data
+    num_predictions = os.environ["DAYS_OF_PREDICTIONS"]
+    predicted_stock_data = stock_prediction(stonk, num_predictions)
+    
+    for i, predicted_price in enumerate(predicted_stock_data):
+        prediction_date = dt.datetime.now() + dt.timedelta(days=i+1)
+        data = {
+            'symbol': stonk,
+            'price': predicted_price,
+            'timestamp': prediction_date.strftime('%Y-%m-%d %H:%M:%S')
+        }
+        producer.send(f'{stonk}_prediction', data)
+        producer.flush()
 
     # Fetch and send real-time market data
     try:
@@ -107,6 +121,7 @@ producer = KafkaProducer(
 
 # Send data for each stonk
 stonks = get_stonks_for_specific_container()
+print("STONKS: ", stonks)
 
 for stonk in stonks:
     Thread(target=send_stonk_data, args=[stonk.lower()]).start()

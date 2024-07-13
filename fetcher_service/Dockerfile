@@ -17,6 +17,7 @@ RUN pip install kafka-python-ng
 RUN pip install requests
 RUN pip install msgpack
 RUN pip install yfinance
+RUN pip install scikit-learn
 #RUN pip install aiokafka
 
 # Set the working directory

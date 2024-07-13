@@ -113,6 +113,7 @@ services:
       KAFKA_BROKER_PORT: 19092
       STONKS: "AAPL,MSFT"
       SERVICES: 2
+      DAYS_OF_PREDICTIONS: 30
     deploy:
       mode: replicated
       replicas: 2
