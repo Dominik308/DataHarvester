@@ -8,6 +8,16 @@ from sklearn.model_selection import train_test_split
 
 
 def stock_prediction(stock_name: str, days_of_prediction: int) -> list[int]:
+    """
+    Predicts the future stock prices for a given stock.
+
+    Args:
+        stock_name (str): The name of the stock to predict.
+        days_of_prediction (int): The number of days to predict.
+
+    Returns:
+        list[int]: A list of predicted stock prices for the next `days_of_prediction` days.
+    """
     # Get Stock Data from API, example: AAPL
     df = yf.Ticker(stock_name).history(period="1y")
     df['Average'] = (df['High'] + df['Low'] + df['Close'] + df['Open']) / 4
