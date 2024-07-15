@@ -49,7 +49,7 @@ def send_stonk_data(stonk: str) -> None:
             producer.flush()
             
     # Send Predicted Stock data
-    num_predictions = os.environ["DAYS_OF_PREDICTIONS"]
+    num_predictions = int(os.environ["DAYS_OF_PREDICTIONS"])
     predicted_stock_data = stock_prediction(stonk, num_predictions)
     
     for i, predicted_price in enumerate(predicted_stock_data):
