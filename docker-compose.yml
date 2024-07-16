@@ -27,7 +27,7 @@ services:
       start_period: 15s # Wait initial (container startup) timeout
       test: python3 health_check.py || exit 1
       timeout: 5s # Wait 5 seconds, if no connection to kafka broker was established, connection failed
-      interval: 15s # If a test has failed, wait 15 seconds and execute test again
+      interval: 30s # If a test has failed, wait 15 seconds and execute test again
       retries: 5 # Execute test 5 times
 
   # Reach UI under: http://localhost:8080
@@ -73,13 +73,12 @@ services:
       start_period: 15s # Wait initial (container startup) timeout
       test: python3 health_check.py || exit 1
       timeout: 5s # Wait 5 seconds, if no connection to kafka broker was established, connection failed
-      interval: 15s # If a test has failed, wait 15 seconds and execute test again
+      interval: 30s # If a test has failed, wait 15 seconds and execute test again
       retries: 5 # Execute test 5 times
 
   kibana:
     hostname: kibana
     container_name: kibana
-#    image: docker.elastic.co/kibana/kibana:8.14.0
     build: ./kibana
     restart: always
     environment:
@@ -89,20 +88,18 @@ services:
       - 5601:5601
     depends_on:
       elasticsearch:
-        condition: service_started
+        condition: service_healthy
     networks:
       - broker-kafka
-    volumes:
-      - ./export.ndjson:/usr/share/kibana/config/export.ndjson
     healthcheck:
       start_period: 15s # Wait initial (container startup) timeout
       test: sh import_dashboards.sh || exit 1
       timeout: 5s # Wait 5 seconds, if no connection to kafka broker was established, connection failed
-      interval: 15s # If a test has failed, wait 15 seconds and execute test again
+      interval: 30s # If a test has failed, wait 15 seconds and execute test again
       retries: 5 # Execute test 5 times
 
   publisher:
-    build: ./fetcher_service
+    build: producer_service
     depends_on:
       kafka:
         condition: service_healthy
@@ -113,9 +110,14 @@ services:
     environment:
       KAFKA_BROKER_PORT: 19092
       STONKS: "AAPL,MSFT"
+      SERVICES: 2
+      DAYS_OF_PREDICTIONS: 30
+    deploy:
+      mode: replicated
+      replicas: 2
 
   consumer:
-    build: ./processor_service
+    build: consumer_service
     depends_on:
       publisher:
         condition: service_started
