@@ -5,3 +5,6 @@ WORKDIR /DataHarvester/health_check_as_upload_config_file
 
 # Copy the application files
 COPY . .
+
+# Remove Windows line endings
+RUN sed -i 's/\r$//' export.ndjson

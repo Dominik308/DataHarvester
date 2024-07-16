@@ -88,16 +88,14 @@ services:
       - 5601:5601
     depends_on:
       elasticsearch:
-        condition: service_started
+        condition: service_healthy
     networks:
       - broker-kafka
-    volumes:
-      - ./export.ndjson:/usr/share/kibana/config/export.ndjson
     healthcheck:
       start_period: 15s # Wait initial (container startup) timeout
       test: sh import_dashboards.sh || exit 1
       timeout: 5s # Wait 5 seconds, if no connection to kafka broker was established, connection failed
-      interval: 15s # If a test has failed, wait 15 seconds and execute test again
+      interval: 30s # If a test has failed, wait 15 seconds and execute test again
       retries: 5 # Execute test 5 times
 
   publisher:

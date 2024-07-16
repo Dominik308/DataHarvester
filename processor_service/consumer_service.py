@@ -47,19 +47,19 @@ for topic in topics:
     if not es.indices.exists(index=f'stock_data_{topic}'):  # Create index with mapping for ElasticSearch
         es.indices.create(index=f'stock_data_{topic}')
 
-    es.indices.put_settings(
-        index=f'stock_data_{topic}',
-        headers={'Content-Type': 'application/json'},
-        body={
-            'index': {
-                'mapping': {
-                    'total_fields': {
-                        'limit': '100000'  # Increase the limit as needed
+        es.indices.put_settings(
+            index=f'stock_data_{topic}',
+            headers={'Content-Type': 'application/json'},
+            body={
+                'index': {
+                    'mapping': {
+                        'total_fields': {
+                            'limit': '100000'  # Increase the limit as needed
+                        }
                     }
                 }
             }
-        }
-    )
+        )
 
 # Consume messages from the topics
 for message in consumer:
