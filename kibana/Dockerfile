@@ -7,4 +7,5 @@ WORKDIR /DataHarvester/health_check_as_upload_config_file
 COPY . .
 
 # Remove Windows line endings
-RUN sed -i 's/\r$//' export.ndjson
+RUN sed -i 's/\r$//g' import_dashboards.sh
+RUN sed -i 's/\r$//g' export.ndjson
