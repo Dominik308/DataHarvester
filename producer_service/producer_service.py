@@ -43,7 +43,7 @@ def send_stonk_data(stonk: str) -> None:
             data = {
                 'symbol': stock.info['symbol'],
                 'price': frame_of_day['average'],
-                'timestamp': date.strftime('%Y-%m-%d') + " 00:00:00"
+                'date': date.timestamp()
             }
             producer.send(f'{stonk}_{period}', data)
             producer.flush()
