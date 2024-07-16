@@ -99,7 +99,7 @@ services:
       retries: 5 # Execute test 5 times
 
   publisher:
-    build: ./fetcher_service
+    build: producer_service
     depends_on:
       kafka:
         condition: service_healthy
@@ -117,7 +117,7 @@ services:
       replicas: 2
 
   consumer:
-    build: ./processor_service
+    build: consumer_service
     depends_on:
       publisher:
         condition: service_started

@@ -26,4 +26,4 @@ WORKDIR /DataHarvester/fetcher_service
 
 COPY . .
 
-CMD ["python3", "publisher_service.py"]
+CMD ["python3", "producer_service.py"]
