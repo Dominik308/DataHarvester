@@ -109,7 +109,7 @@ services:
       - broker-kafka
     environment:
       KAFKA_BROKER_PORT: 19092
-      STONKS: "AAPL,MSFT"
+      STONKS: "AAPL,MSFT,GOOGL,NFLX,AMZN,NVDA"
       SERVICES: 2
       DAYS_OF_PREDICTIONS: 30
     deploy:
@@ -130,7 +130,7 @@ services:
     environment:
       KAFKA_BROKER_PORT: 19092
       ELASTICSEARCH_DATA_PREPARER_PORT: 9200
-      STONKS: "AAPL,MSFT"
+      STONKS: "AAPL,MSFT,GOOGL,NFLX,AMZN,NVDA"
 
 networks:
   broker-kafka:
