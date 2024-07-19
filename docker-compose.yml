@@ -109,7 +109,7 @@ services:
       - broker-kafka
     environment:
       KAFKA_BROKER_PORT: 19092
-      STONKS: "AAPL,MSFT,GOOGL,NFLX,AMZN,NVDA"
+      STONKS: "AAPL,MSFT,NFLX,AMZN,NVDA"
       SERVICES: 2
       DAYS_OF_PREDICTIONS: 30
     deploy:
