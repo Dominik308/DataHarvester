@@ -24,3 +24,4 @@ Docker: To containerize the application, ensuring consistency across different e
 Elasticsearch: For storing and indexing stock data, enabling efficient search and retrieval.
 Apache Kafka: For real-time data streaming and handling high-throughput data ingestion.
 Kibana: For visualizing the stock data in an interactive and real-time manner.
+<img width="1831" height="867" alt="BigData" src="https://github.com/user-attachments/assets/052c2e85-62f1-417d-a434-08b699d9f239" />
